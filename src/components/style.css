@@ -1,0 +1,13 @@
+.source {
+    width: 50%;
+    float: left;
+}
+
+.source h3 {
+    margin-left: 2em;
+}
+
+.compile {
+    margin: 1.42em;
+    font-size: 1.42em;
+}
