@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "codemirror": "^5.55.0",
+    "file-saver": "^2.0.2",
     "js-yaml": "^3.14.0",
     "preact": "^10.3.2",
     "preact-codemirror": "^1.0.1",

@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import _ from 'underscore';
 import jsYaml from 'js-yaml'
+import { saveAs } from 'file-saver';
 
 import CodeMirror from "preact-codemirror";
 import 'codemirror/mode/yaml/yaml'
@@ -22,12 +23,15 @@ const DEFAULT_LATEX_TEMPLATE = `\\documentclass{article}
 Hello << world >>! \\\\
 \\end{document}`;
 
+
+// TODO create "projects" with localstorage for each project
+
 export default class App extends Component {
 
 	yamlInstance = null;
 	latexInstance = null;
 
-	async compile() {
+	compile = async () => {
 		if(!this.yamlInstance || !this.latexInstance) {
 			console.error("Error with code mirrors instances. Try to reload the page.");
 			return;
@@ -37,27 +41,36 @@ export default class App extends Component {
 
 		const yaml = this.yamlInstance.getValue()
 		const json = jsYaml.safeLoad(yaml);
-		console.log(json)
+		console.log("yaml to json:", json)
 		
+		// TODO use https://olado.github.io/doT/index.html instead of underscore.template
 		const latex = this.latexInstance.getValue()
 		const latexCompiled = _.template(latex)(json)
-		console.log(latexCompiled)
+		console.log("latex compiled with data:", latexCompiled)
+		
 
 		const res = await fetch('https://latex.ytotech.com/builds/sync', {
 			method: 'POST',
-			mode: 'no-cors',
-			body: {
-				compiler: "pdflatex",
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			responseType: 'blob',
+			body: JSON.stringify({
+				compiler: "pdflatex", // TODO select for the compiler between availables ones
 				resources: [
 					{
 						main: true,
 						content: latexCompiled
 					}
 				]
-			}
+			})
 		})
-		console.log(res)
-		// TODO make res body (pdf) downloadable
+		// TODO catch and display errors
+		const blob = await res.blob();
+
+		// TODO put the name of the current project
+		saveAs(blob, 'default.pdf');
 	}
 
 	render() {
@@ -91,7 +104,7 @@ export default class App extends Component {
 					/>
 				</div>
 
-				<button class={style.compile} onClick={this.compile.bind(this)}>Compile</button>
+				<button class={style.compile} onClick={this.compile}>Convert to PDF</button>
 			</div>
 		);
 	}
