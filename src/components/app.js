@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import _ from 'underscore';
+import doT from 'dot';
 import jsYaml from 'js-yaml'
 import { saveAs } from 'file-saver';
 
@@ -12,15 +12,25 @@ import Header from './header';
 
 import style from './style.css';
 
-_.templateSettings = {
-	interpolate: /<<(.+?)>>/g
+doT.templateSettings = {
+	evaluate:    /\$\$([\s\S]+?)\$\$/g,
+	interpolate: /\$\$=([\s\S]+?)\$\$/g,
+	encode:      /\$\$!([\s\S]+?)\$\$/g,
+	use:         /\$\$#([\s\S]+?)\$\$/g,
+	define:      /\$\$##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#\$\$/g,
+	conditional: /\$\$\?(\?)?\s*([\s\S]*?)\s*\$\$/g,
+	iterate:     /\$\$~\s*(?:\$\$|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\$\$)/g,
+	varname: 'it',
+	strip: true,
+	append: true,
+	selfcontained: false
 };
 
 const DEFAULT_YAML_DATA = `world: 'World'`;
 const DEFAULT_LATEX_TEMPLATE = `\\documentclass{article}
 \\usepackage{graphicx}
 \\begin{document}
-Hello << world >>! \\\\
+Hello $$= it.world $$! \\\\
 \\end{document}`;
 
 
@@ -45,7 +55,7 @@ export default class App extends Component {
 		
 		// TODO use https://olado.github.io/doT/index.html instead of underscore.template
 		const latex = this.latexInstance.getValue()
-		const latexCompiled = _.template(latex)(json)
+		const latexCompiled = doT.template(latex)(json)
 		console.log("latex compiled with data:", latexCompiled)
 		
 
