@@ -45,3 +45,11 @@
 .header nav a.active {
 	background: rgba(0,0,0,0.4);
 }
+
+.header nav a img {
+	display: inline-block;
+	height: 24px;
+	position: relative;
+	top: 5px;
+	margin-left: 10px;
+}
