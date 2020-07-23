@@ -14,7 +14,11 @@
 }
 
 
-.compile {
-    margin: 1.42em;
-    font-size: 1.42em;
+.input {
+    margin: 20px;
+    display: inline-block;
+}
+
+.convert {
+    margin: 20px;
 }

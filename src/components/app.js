@@ -14,13 +14,13 @@ import Header from './header';
 import style from './style.css';
 
 doT.templateSettings = {
-	evaluate:    /\$\$([\s\S]+?)\$\$/g,
-	interpolate: /\$\$=([\s\S]+?)\$\$/g,
-	encode:      /\$\$!([\s\S]+?)\$\$/g,
-	use:         /\$\$#([\s\S]+?)\$\$/g,
-	define:      /\$\$##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#\$\$/g,
-	conditional: /\$\$\?(\?)?\s*([\s\S]*?)\s*\$\$/g,
-	iterate:     /\$\$~\s*(?:\$\$|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\$\$)/g,
+	evaluate:    /<<([\s\S]+?)>>/g,
+	interpolate: /<<=([\s\S]+?)>>/g,
+	encode:      /<<!([\s\S]+?)>>/g,
+	use:         /<<#([\s\S]+?)>>/g,
+	define:      /<<##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#>>/g,
+	conditional: /<<\?(\?)?\s*([\s\S]*?)\s*>>/g,
+	iterate:     /<<~\s*(?:<<|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*>>)/g,
 	varname: 'it',
 	strip: false,
 	append: true,
@@ -31,8 +31,10 @@ const DEFAULT_YAML_DATA = `world: 'World'`;
 const DEFAULT_LATEX_TEMPLATE = `\\documentclass{article}
 \\usepackage{graphicx}
 \\begin{document}
-Hello $$= it.world $$! \\\\
+Hello <<= it.world >>! \\\\
 \\end{document}`;
+
+const AVAILABLE_COMPILERS = ['pdflatex', 'xelatex', 'lualatex', 'platex', 'uplatex', 'context']
 
 
 // TODO create "projects" with localstorage for each project
@@ -43,9 +45,16 @@ export default class App extends Component {
 	latexInstance = null;
 
 	state = {
+		compiler: AVAILABLE_COMPILERS[0],
+		yamlData: DEFAULT_YAML_DATA,
+		latexTemplate: DEFAULT_LATEX_TEMPLATE,
 		jsonData: null,
 		latexCompiled: null,
 		payload: null
+	}
+
+	onCompilerChange = e => {
+		this.setState({ compiler: e.target.value });
 	}
 
 	compile = async () => {
@@ -54,21 +63,26 @@ export default class App extends Component {
 			return;
 		}
 
-		// TODO manage errors while parsing/templating
+		// TODO display errors while parsing/templating
 
 		const yaml = this.yamlInstance.getValue()
-		const json = jsYaml.safeLoad(yaml);
+		this.setState({ yamlData: yaml })
+		const yamlSpaces = yaml.replace(/\t/g, '    ')
+		console.log('yaml', yamlSpaces)
+
+		const json = jsYaml.load(yamlSpaces);
 		this.setState({ jsonData: JSON.stringify(json, null, 2) })
 		console.log("yaml to json:", json)
 		
-		// TODO use https://olado.github.io/doT/index.html instead of underscore.template
 		const latex = this.latexInstance.getValue()
+		this.setState({ latexTemplate: latex })
+
 		const latexCompiled = doT.template(latex)(json)
 		this.setState({ latexCompiled })
 		console.log("latex compiled with data:", latexCompiled)
 		
 		const payload = {
-			compiler: "pdflatex", // TODO select for the compiler between availables ones
+			compiler: this.state.compiler,
 			resources: [
 				{
 					main: true,
@@ -79,30 +93,53 @@ export default class App extends Component {
 		this.setState({ payload: JSON.stringify(payload, null, 2) })
 		console.log("payload:", payload)
 
-		// const res = await fetch('https://latex.ytotech.com/builds/sync', {
-		// 	method: 'POST',
-		// 	headers: {
-		// 		Accept: 'application/json',
-		// 		'Content-Type': 'application/json'
-		// 	},
-		// 	responseType: 'blob',
-		// 	body: JSON.stringify(payload)
-		// })
-		// // TODO catch and display errors
-		// const blob = await res.blob();
+		const res = await fetch('https://latex.ytotech.com/builds/sync', {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			responseType: 'blob',
+			body: JSON.stringify(payload)
+		})
+		// TODO catch and display errors
+		const blob = await res.blob();
 
-		// // TODO put the name of the current project
-		// saveAs(blob, 'default.pdf');
+		// TODO put the name of the current project
+		saveAs(blob, 'default.pdf');
 	}
 
 	render() {
 		return (
 			<div id="app">
 				<Header />
+
+				<div>
+					<div class={style.input} >
+						<span>Template: </span>
+						<select>
+							<option>Hello world!</option>
+						</select>
+					</div>
+					<div class={style.input} >
+						<span>Compiler: </span>
+						<select value={this.state.compiler} onChange={this.onCompilerChange} >
+							{
+								AVAILABLE_COMPILERS.map(compiler => (
+									<option value={compiler}>{compiler}</option>
+								))
+							}
+						</select>
+					</div>
+					<button class={style.convert} onClick={this.compile}>Convert to PDF</button>
+				</div>
+
+				<div style={{ clear: 'both' }} />
+
 				<div class={style.source} >
 					<h3>Source data (yaml)</h3>
 					<CodeMirror
-						code={DEFAULT_YAML_DATA}
+						code={this.state.yamlData}
 						config={{
 							lineNumbers: true,
 							mode: 'text/x-yaml'
@@ -112,11 +149,11 @@ export default class App extends Component {
 						}}
 					/>
 				</div>
-				
+
 				<div class={style.source} >
 					<h3>Source template (LaTeX)</h3>
 					<CodeMirror
-						code={DEFAULT_LATEX_TEMPLATE}
+						code={this.state.latexTemplate}
 						config={{
 							lineNumbers: true,
 							mode: 'text/x-stex'
@@ -157,7 +194,7 @@ export default class App extends Component {
 
 				{ this.state.payload &&
 					<div class={style.sourceFull} >
-						<h3>Payload (json) </h3>
+						<h3>Payload for LaTeX-on-HTTP (json) </h3>
 						<CodeMirror
 							code={this.state.payload}
 							config={{
@@ -169,7 +206,6 @@ export default class App extends Component {
 					</div>
 				}
 
-				<button class={style.compile} onClick={this.compile}>Convert to PDF</button>
 			</div>
 		);
 	}
