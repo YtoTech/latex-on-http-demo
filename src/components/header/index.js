@@ -9,10 +9,10 @@ const Header = () => (
 		</h1>
 		<nav>
 			<a href="https://github.com/YtoTech/latex-on-http">built with LaTeX-on-HTTP
-				<img src={GitHubLogo} />
+				<img src={GitHubLogo} alt="GitHub" />
 			</a>
 			<a href="https://github.com/YtoTech/latex-on-http-demo">Demo source code
-				<img src={GitHubLogo} />
+				<img src={GitHubLogo} alt="GitHub" />
 			</a>
 		</nav>
 	</header>

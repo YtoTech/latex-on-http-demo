@@ -1,11 +1,18 @@
 .source {
     width: 50%;
     float: left;
+    margin-bottom: 20px;
 }
 
-.source h3 {
+.sourceFull {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.source h3, .sourceFull h3 {
     margin-left: 2em;
 }
+
 
 .compile {
     margin: 1.42em;
