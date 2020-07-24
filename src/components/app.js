@@ -27,6 +27,9 @@ doT.templateSettings = {
 	selfcontained: false
 };
 
+const AVAILABLE_COMPILERS = ['pdflatex', 'xelatex', 'lualatex', 'platex', 'uplatex', 'context']
+
+// TODO externalize these
 const DEFAULT_YAML_DATA = `world: 'World'`;
 const DEFAULT_LATEX_TEMPLATE = `\\documentclass{article}
 \\usepackage{graphicx}
@@ -34,8 +37,12 @@ const DEFAULT_LATEX_TEMPLATE = `\\documentclass{article}
 Hello <<= it.world >>! \\\\
 \\end{document}`;
 
-const AVAILABLE_COMPILERS = ['pdflatex', 'xelatex', 'lualatex', 'platex', 'uplatex', 'context']
-
+const DEFAULT_TEMPLATES = [{
+	name: "hello-world",
+	yamlData: DEFAULT_YAML_DATA,
+	compiler: 'pdflatex',
+	latexTemplate: DEFAULT_LATEX_TEMPLATE
+}]
 
 // TODO create "projects" with localstorage for each project
 
@@ -45,19 +52,75 @@ export default class App extends Component {
 	latexInstance = null;
 
 	state = {
-		compiler: AVAILABLE_COMPILERS[0],
-		yamlData: DEFAULT_YAML_DATA,
-		latexTemplate: DEFAULT_LATEX_TEMPLATE,
+		templates: null,
+		currentTemplateIndex: null,
+
 		jsonData: null,
 		latexCompiled: null,
 		payload: null
 	}
 
-	onCompilerChange = e => {
-		this.setState({ compiler: e.target.value });
+	componentWillMount() {
+		// localStorage.clear()
+		let templates = localStorage.getItem('templates')
+		if (!templates) {
+			templates = DEFAULT_TEMPLATES
+		} else {
+			console.log(templates)
+			templates = JSON.parse(templates)
+		}
+
+		let currentTemplateIndex = parseInt(localStorage.getItem('currentTemplateIndex') || "0", 10)
+
+		this.setState({
+			templates,
+			currentTemplateIndex
+		})
 	}
 
-	compile = async () => {
+	onCompilerChange = e => {
+		const templates = [...this.state.templates]
+		const template = templates[this.state.currentTemplateIndex]
+		template.compiler = e.target.value
+		
+		localStorage.setItem('templates', JSON.stringify(templates))
+		this.setState({ templates })
+	}
+
+	// TODO factorize change logic
+	onNameChange = e => {
+		const templates = [...this.state.templates]
+		const template = templates[this.state.currentTemplateIndex]
+		template.name = e.target.value
+		
+		localStorage.setItem('templates', JSON.stringify(templates))
+		this.setState({ templates })
+	}
+
+	onTemplateChange = e => {
+		const idx = parseInt(e.target.value, 10)
+		if (idx === this.state.currentTemplateIndex) {
+			return
+		}
+
+		if (idx === this.state.templates.length) {
+			this.setState({
+				templates: [...this.state.templates, Object.assign({}, DEFAULT_TEMPLATES[0])], 
+				currentTemplateIndex: idx
+			});
+		} else {
+			this.setState({ currentTemplateIndex: idx });
+		}
+
+		localStorage.setItem('currentTemplateIndex', idx)
+		this.setState({ 
+			jsonData: null,
+			latexCompiled: null,
+			payload: null
+		});
+	}
+
+	compile = () => {
 		if(!this.yamlInstance || !this.latexInstance) {
 			console.error("Error with code mirrors instances. Try to reload the page.");
 			return;
@@ -65,24 +128,32 @@ export default class App extends Component {
 
 		// TODO display errors while parsing/templating
 
-		const yaml = this.yamlInstance.getValue()
-		this.setState({ yamlData: yaml })
-		const yamlSpaces = yaml.replace(/\t/g, '    ')
+		const templates = [...this.state.templates]
+		const template = templates[this.state.currentTemplateIndex]
+
+		// Get inputs
+		const yamlData = this.yamlInstance.getValue()
+		const latexTemplate = this.latexInstance.getValue()
+		template.yamlData = yamlData
+		template.latexTemplate = latexTemplate
+
+		localStorage.setItem('templates', JSON.stringify(templates))
+		this.setState({ templates })
+
+		// yaml to json
+		const yamlSpaces = yamlData.replace(/\t/g, '    ')
 		console.log('yaml', yamlSpaces)
-
-		const json = jsYaml.load(yamlSpaces);
-		this.setState({ jsonData: JSON.stringify(json, null, 2) })
-		console.log("yaml to json:", json)
+		const jsonData = jsYaml.load(yamlSpaces);
+		this.setState({ jsonData: JSON.stringify(jsonData, null, 2) })
+		console.log("yaml to json:", jsonData)
 		
-		const latex = this.latexInstance.getValue()
-		this.setState({ latexTemplate: latex })
-
-		const latexCompiled = doT.template(latex)(json)
+		// Compile latex template with data
+		const latexCompiled = doT.template(latexTemplate)(jsonData)
 		this.setState({ latexCompiled })
 		console.log("latex compiled with data:", latexCompiled)
 		
 		const payload = {
-			compiler: this.state.compiler,
+			compiler: template.compiler,
 			resources: [
 				{
 					main: true,
@@ -92,6 +163,12 @@ export default class App extends Component {
 		}
 		this.setState({ payload: JSON.stringify(payload, null, 2) })
 		console.log("payload:", payload)
+
+		return payload
+	}
+
+	convertToPdf = async () => {
+		const payload = this.compile()
 
 		const res = await fetch('https://latex.ytotech.com/builds/sync', {
 			method: 'POST',
@@ -110,20 +187,32 @@ export default class App extends Component {
 	}
 
 	render() {
+
+		const template = this.state.templates[this.state.currentTemplateIndex]
+
 		return (
 			<div id="app">
 				<Header />
-
 				<div>
 					<div class={style.input} >
 						<span>Template: </span>
-						<select>
-							<option>Hello world!</option>
+						<select value={this.state.currentTemplateIndex} onChange={this.onTemplateChange} >
+							{
+								this.state.templates.map((template, idx) => (
+									<option value={idx}>{template.name}</option>
+								))
+							}
+							<option value={this.state.templates.length}>&gt; Add new template</option>
 						</select>
+					</div>
+					<br />
+					<div class={style.input}>
+						<span>Name: </span>
+						<input type="text" value={template.name} onChange={this.onNameChange} />
 					</div>
 					<div class={style.input} >
 						<span>Compiler: </span>
-						<select value={this.state.compiler} onChange={this.onCompilerChange} >
+						<select value={template.compiler} onChange={this.onCompilerChange} >
 							{
 								AVAILABLE_COMPILERS.map(compiler => (
 									<option value={compiler}>{compiler}</option>
@@ -131,7 +220,8 @@ export default class App extends Component {
 							}
 						</select>
 					</div>
-					<button class={style.convert} onClick={this.compile}>Convert to PDF</button>
+					<button class={style.convert} onClick={this.compile}>Compile template</button>
+					<button class={style.convert} onClick={this.convertToPdf}>Convert to PDF</button>
 				</div>
 
 				<div style={{ clear: 'both' }} />
@@ -139,7 +229,7 @@ export default class App extends Component {
 				<div class={style.source} >
 					<h3>Source data (yaml)</h3>
 					<CodeMirror
-						code={this.state.yamlData}
+						code={template.yamlData}
 						config={{
 							lineNumbers: true,
 							mode: 'text/x-yaml'
@@ -153,7 +243,7 @@ export default class App extends Component {
 				<div class={style.source} >
 					<h3>Source template (LaTeX)</h3>
 					<CodeMirror
-						code={this.state.latexTemplate}
+						code={template.latexTemplate}
 						config={{
 							lineNumbers: true,
 							mode: 'text/x-stex'
