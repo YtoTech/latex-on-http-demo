@@ -12,6 +12,7 @@ import 'codemirror/theme/elegant.css'
 import Header from './header';
 
 import style from './style.css';
+import PROPOSAL_TEMPLATE from '../templates/proposal';
 
 doT.templateSettings = {
 	evaluate:    /<<([\s\S]+?)>>/g,
@@ -37,12 +38,15 @@ const DEFAULT_LATEX_TEMPLATE = `\\documentclass{article}
 Hello <<= it.world >>! \\\\
 \\end{document}`;
 
-const DEFAULT_TEMPLATES = [{
-	name: "hello-world",
-	yamlData: DEFAULT_YAML_DATA,
-	compiler: 'pdflatex',
-	latexTemplate: DEFAULT_LATEX_TEMPLATE
-}]
+const DEFAULT_TEMPLATES = [
+	{
+		name: "hello-world",
+		yamlData: DEFAULT_YAML_DATA,
+		compiler: 'pdflatex',
+		latexTemplate: DEFAULT_LATEX_TEMPLATE
+	},
+	PROPOSAL_TEMPLATE,
+]
 
 // TODO create "projects" with localstorage for each project
 
