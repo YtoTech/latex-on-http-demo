@@ -9,9 +9,10 @@ import 'codemirror/mode/stex/stex'
 import 'codemirror/mode/javascript/javascript'
 import 'codemirror/theme/elegant.css'
 
+import style from './style.css';
+
 import Header from './header';
 
-import style from './style.css';
 import PROPOSAL_TEMPLATE from '../templates/proposal';
 
 doT.templateSettings = {

@@ -1,6 +1,11 @@
+// https://github.com/YtoTech/latex-on-http/blob/master/samples/quotes/mrzool-inspired/details.yml
+// https://github.com/YtoTech/latex-on-http/blob/master/samples/quotes/mrzool-inspired/template-pandoc.tex
+
 export const YAML_DATA = `world: 'World'`;
+
 export const LATEX_TEMPLATE = String.raw`%!TEX TS-program = xelatex
 %!TEX encoding = UTF-8 Unicode
+% Inspired from mrzool Invoice Boilerplate template; source: https://github.com/mrzool/invoice-boilerplate
 
 \documentclass[10pt, a4paper]{article}
 
