@@ -109,6 +109,9 @@ export default function LatexOnHttpDemoApp() {
 	const [jsonData, setJsonData] = useState(null);
 	const [latexCodeCompiled, setLatexCodeCompiled] = useState(null);
 	const [latexOnHttpPayload, setLatexOnHttpPayload] = useState(null);
+	const [isCompiling, setIsCompiling] = useState(false);
+	// TODO Store response, show error logs or PDF (with PDF.js).
+	// const [latexOnHttpResponse, setLatexOnHttpResponse] = useState(null);
 	useEffect(() => {
 		// Loads templates from localStorage.
 		const [
@@ -210,7 +213,8 @@ export default function LatexOnHttpDemoApp() {
 
 	const convertToPdf = async () => {
 		const payload = compileTemplate()
-
+		
+		setIsCompiling(true);
 		const res = await fetch('https://latex.ytotech.com/builds/sync', {
 			method: 'POST',
 			headers: {
@@ -220,11 +224,17 @@ export default function LatexOnHttpDemoApp() {
 			responseType: 'blob',
 			body: JSON.stringify(payload)
 		})
-		// TODO catch and display errors
-		const blob = await res.blob();
+		try {
+			// TODO catch and display errors
+			const blob = await res.blob();
 
-		// TODO put the name of the current project
-		saveAs(blob, 'default.pdf');
+			// TODO put the name of the current project
+			saveAs(blob, 'default.pdf');
+		} catch(e) {
+			console.error(`Error LaTeX-on-HTTP response handling: ${e}`);
+		} finally {
+			setIsCompiling(false);
+		}
 	}
 
 	const template = templates[currentTemplateIndex]
@@ -268,8 +278,12 @@ export default function LatexOnHttpDemoApp() {
 				<button class={style.convert} onClick={compileTemplate}>
 					Compile template
 				</button>
-				<button class={style.convert} onClick={convertToPdf}>
-					Convert to PDF
+				<button
+					class={style.convert}
+					onClick={convertToPdf}
+					disabled={isCompiling}
+				>
+					{!isCompiling ? 'Convert to PDF' : 'Converting...'}
 				</button>
 			</div>
 
