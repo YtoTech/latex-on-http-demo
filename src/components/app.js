@@ -4,11 +4,19 @@ import doT from 'dot';
 import jsYaml from 'js-yaml'
 import { saveAs } from 'file-saver';
 
-import CodeMirror from "preact-codemirror";
-import 'codemirror/mode/yaml/yaml'
-import 'codemirror/mode/stex/stex'
-import 'codemirror/mode/javascript/javascript'
-import 'codemirror/theme/elegant.css'
+import CodeMirror from '@uiw/react-codemirror';
+import { StreamLanguage } from '@codemirror/language';
+import { languages } from '@codemirror/language-data';
+import { stex } from '@codemirror/legacy-modes/mode/stex';
+import { yaml as yamlLang } from '@codemirror/legacy-modes/mode/yaml';
+
+import { json as jsonLang, jsonLanguage } from '@codemirror/lang-json';
+
+
+// import 'codemirror/mode/yaml/yaml'
+// import 'codemirror/mode/stex/stex'
+// import 'codemirror/mode/javascript/javascript'
+// import 'codemirror/theme/elegant.css'
 
 import style from './style.css';
 
@@ -51,7 +59,6 @@ const DEFAULT_TEMPLATES = [
 ]
 
 // TODO Delete or reset templates
-// TODO Compilation indicator (overlay)
 // TODO create "projects" with localstorage for each project
 
 // LocalStorage.
@@ -102,8 +109,6 @@ function saveTemplateIndexToLocalStorage(templateIndex) {
 }
 
 export default function LatexOnHttpDemoApp() {
-	let yamlCodeEditorInstance;
-	let latexCodeEditorInstance;
 	const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
 	const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
 	const [jsonData, setJsonData] = useState(null);
@@ -150,54 +155,42 @@ export default function LatexOnHttpDemoApp() {
 		resetCompilationContext()
 	}
 
-	const onTemplateEntryChange = (entryKey, e) => {
-		const templatesUpdated = [...this.state.templates]
-		const templateUpdated = {
+	const onTemplateEntryChange = (entryKey, newValue, saveToLocalStorage = true) => {
+		const templatesUpdated = [...templates]
+		templatesUpdated[currentTemplateIndex] = {
 			...templatesUpdated[currentTemplateIndex],
-			[entryKey]: e.target.value,
+			[entryKey]: newValue,
 		};
 		
-		saveTemplatesToLocalStorage(templates);
-		setTemplates(templates);
+		if (saveToLocalStorage) {
+			saveTemplatesToLocalStorage(templatesUpdated);
+		}
+		setTemplates(templatesUpdated);
 	}
 
 	const compileTemplate = () => {
-		if(!yamlCodeEditorInstance || !latexCodeEditorInstance) {
-			console.error("Error with code mirrors instances. Try to reload the page.");
-			return;
-		}
-
 		// TODO display errors while parsing/templating
-		const templatesUpdated = [...templates]
+		//  --> On the fly / change.
 
-		// Get inputs
-		// TODO Really bad: use onChange to set editor values in
-		// react state. Make the editors controlled.
-		const yamlData = yamlCodeEditorInstance.getValue()
-		const latexTemplate = latexCodeEditorInstance.getValue()
-		const templateUpdated = {
-			...templatesUpdated[currentTemplateIndex],
-			yamlData,
-			latexTemplate,
-		};
-
+		// Save templates to localStorage on compile.
+		console.log(templates);
+		console.log(template.latexTemplate);
 		saveTemplatesToLocalStorage(templates);
-		setTemplates(templates);
 
 		// yaml to json
-		const yamlSpaces = yamlData.replace(/\t/g, '    ')
+		const yamlSpaces = template.yamlData.replace(/\t/g, '    ')
 		console.log('yaml', yamlSpaces)
 		const jsonData = jsYaml.load(yamlSpaces);
 		setJsonData(JSON.stringify(jsonData, null, 2));
 		console.log("yaml to json:", jsonData)
 		
 		// Compile latex template with data
-		const latexCompiled = doT.template(latexTemplate)(jsonData)
+		const latexCompiled = doT.template(template.latexTemplate)(jsonData)
 		setLatexCodeCompiled(latexCompiled);
 		console.log("latex compiled with data:", latexCompiled)
 		
 		const payload = {
-			compiler: templateUpdated.compiler,
+			compiler: template.compiler,
 			resources: [
 				{
 					main: true,
@@ -248,7 +241,7 @@ export default function LatexOnHttpDemoApp() {
 					<select value={currentTemplateIndex} onChange={onTemplateSelection} >
 						{
 							templates.map((template, idx) => (
-								<option value={idx}>{template.name}</option>
+								<option key={idx} value={idx}>{template.name}</option>
 							))
 						}
 						<option value={templates.length}>&gt; Add new template</option>
@@ -259,18 +252,18 @@ export default function LatexOnHttpDemoApp() {
 					<span>Name: </span>
 					<input
 						type="text" value={template.name}
-						onChange={e => onTemplateEntryChange('name', e)}	
+						onChange={e => onTemplateEntryChange('name', e.target.value)}	
 					/>
 				</div>
 				<div class={style.input} >
 					<span>Compiler: </span>
 					<select
 						value={template.compiler}
-						onChange={e => onTemplateEntryChange('compiler', e)}	
+						onChange={e => onTemplateEntryChange('compiler', e.target.value)}	
 					>
 						{
 							AVAILABLE_COMPILERS.map(compiler => (
-								<option value={compiler}>{compiler}</option>
+								<option key={compiler} value={compiler}>{compiler}</option>
 							))
 						}
 					</select>
@@ -292,28 +285,20 @@ export default function LatexOnHttpDemoApp() {
 			<div class={style.source} >
 				<h3>Source data (yaml)</h3>
 				<CodeMirror
-					code={template.yamlData}
-					config={{
-						lineNumbers: true,
-						mode: 'text/x-yaml'
-					}}
-					instance={instance => {
-						yamlCodeEditorInstance = instance;
-					}}
+					value={template.yamlData}
+					onChange={v => onTemplateEntryChange('yamlData', v, false)}
+					height="200px"
+					extensions={[StreamLanguage.define(yamlLang)]}
 				/>
 			</div>
 
 			<div class={style.source} >
 				<h3>Source template (LaTeX)</h3>
 				<CodeMirror
-					code={template.latexTemplate}
-					config={{
-						lineNumbers: true,
-						mode: 'text/x-stex'
-					}}
-					instance={instance => {
-						latexCodeEditorInstance = instance;
-					}}
+					value={template.latexTemplate}
+					onChange={v => onTemplateEntryChange('latexTemplate', v, false)}
+					height="200px"
+					extensions={[StreamLanguage.define(stex)]}
 				/>
 			</div>
 
@@ -321,12 +306,9 @@ export default function LatexOnHttpDemoApp() {
 				<div class={style.source} >
 					<h3>Generated data (json)</h3>
 					<CodeMirror
-						code={jsonData}
-						config={{
-							lineNumbers: true,
-							mode: 'application/json',
-							readOnly: true
-						}}
+						value={jsonData}
+						extensions={[jsonLang({ base: jsonLanguage, codeLanguages: languages })]}
+						readOnly
 					/>
 				</div>
 			}
@@ -335,12 +317,9 @@ export default function LatexOnHttpDemoApp() {
 				<div class={style.source} >
 					<h3>Generated LaTeX with data</h3>
 					<CodeMirror
-						code={latexCodeCompiled}
-						config={{
-							lineNumbers: true,
-							mode: 'text/x-stex',
-							readOnly: true
-						}}
+						value={latexCodeCompiled}
+						extensions={[StreamLanguage.define(stex)]}
+						readOnly
 					/>
 				</div>
 			}
@@ -349,12 +328,9 @@ export default function LatexOnHttpDemoApp() {
 				<div class={style.sourceFull} >
 					<h3>Payload for LaTeX-on-HTTP (json) </h3>
 					<CodeMirror
-						code={latexOnHttpPayload}
-						config={{
-							lineNumbers: true,
-							mode: 'application/json',
-							readOnly: true
-						}}
+						value={latexOnHttpPayload}
+						extensions={[jsonLang({ base: jsonLanguage, codeLanguages: languages })]}
+						readOnly
 					/>
 				</div>
 			}
