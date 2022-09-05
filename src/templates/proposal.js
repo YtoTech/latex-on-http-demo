@@ -11,22 +11,22 @@ export const LATEX_TEMPLATE = String.raw`%!TEX TS-program = xelatex
 
 % LAYOUT
 %--------------------------------
-\usepackage{geometry} 
+\\usepackage{geometry} 
 \geometry{a4paper, left=43mm, right=43mm, top=51mm, bottom=17mm}
 
 % No page numbers
 \pagenumbering{gobble}
 
 % Left align
-\usepackage[document]{ragged2e}
+\\usepackage[document]{ragged2e}
 
 
 % TYPOGRAPHY (Modified: for T1 fonts)
 %--------------------------------
 % You can choose a font on https://tug.org/FontCatalogue/
-\usepackage[T1]{fontenc}
-\usepackage{crimson}
-\usepackage[defaultsans]{opensans}
+\\usepackage[T1]{fontenc}
+\\usepackage{crimson}
+\\usepackage[defaultsans]{opensans}
 
 % Set paragraph break
 \setlength{\parskip}{1em}
@@ -37,20 +37,20 @@ export const LATEX_TEMPLATE = String.raw`%!TEX TS-program = xelatex
 
 % TABLE CUSTOMIZATION
 %--------------------------------
-\usepackage{spreadtab}
-\usepackage[compact]{titlesec} % For customizing title sections
+\\usepackage{spreadtab}
+\\usepackage[compact]{titlesec} % For customizing title sections
 \titlespacing*{\section}{0pt}{3pt}{-7pt} % Remove margin bottom from the title
-\usepackage{arydshln} % For the dotted line on the table
+\\usepackage{arydshln} % For the dotted line on the table
 \renewcommand{\arraystretch}{1.5} % Apply vertical padding to table cells
-\usepackage{hhline} % For single-cell borders
-\usepackage{enumitem} % For customizing lists
+\\usepackage{hhline} % For single-cell borders
+\\usepackage{enumitem} % For customizing lists
 \setlist{nolistsep} % No whitespace around list items
 \setlist[itemize]{leftmargin=0.5cm} % Reduce list left indent
 \setlength{\tabcolsep}{9pt} % Larger gutter between columns
 
 % Boxes
 %--------------------------------
-\usepackage{tcolorbox}
+\\usepackage{tcolorbox}
 % Create box
 % https://en.wikibooks.org/wiki/LaTeX/Boxes
 % https://ctan.org/pkg/tcolorbox
@@ -66,12 +66,12 @@ export const LATEX_TEMPLATE = String.raw`%!TEX TS-program = xelatex
 
 % LANGUAGE
 %--------------------------------
-\usepackage{polyglossia}
+\\usepackage{polyglossia}
 \setmainlanguage{english}
 
 % PDF SETUP
 %--------------------------------
-\usepackage[xetex, bookmarks, colorlinks, breaklinks]{hyperref}
+\\usepackage[xetex, bookmarks, colorlinks, breaklinks]{hyperref}
 \hypersetup
 {
   pdfauthor={Max Mustermann},
@@ -85,7 +85,7 @@ export const LATEX_TEMPLATE = String.raw`%!TEX TS-program = xelatex
 
 
 % To display custom date
-% \usepackage[nodayofweek]{datetime}
+% \\usepackage[nodayofweek]{datetime}
 % \newdate{date}{01}{12}{1867}
 % \date{\displaydate{date}}
 % Use this instead of \today: % \displaydate{date}
@@ -126,7 +126,7 @@ Germany\\
 
     La prestation consiste à \ldots{}
 
-    Inclure un lien avec \url{https://www.tesla.com}.
+    Inclure un lien avec \\url{https://www.tesla.com}.
     \section*{\textsc{Définitions}}
     Tesla désigne le constructeur automobile de voitures électriques
     sportives et de luxe dont le siège social se situe à Palo Alto, dans
