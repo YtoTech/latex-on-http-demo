@@ -1,3 +1,4 @@
+// TODO Drop preact, the webpack build is crazy.
 import { h,  } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import doT from 'dot';
