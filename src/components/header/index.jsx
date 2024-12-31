@@ -1,12 +1,11 @@
 import { h } from 'preact';
-import style from './style.css';
+import './style.css';
 
 import GitHubLogo from '../../assets/GitHub-Mark-Light-64px.png'
 
 const Header = () => (
-	<header class={style.header}>
-		<h1>latex-on-http demo
-		</h1>
+	<header class="header">
+		<h1>latex-on-http demo</h1>
 		<nav>
 			<a href="https://github.com/YtoTech/latex-on-http">built with LaTeX-on-HTTP
 				<img src={GitHubLogo} alt="GitHub" />

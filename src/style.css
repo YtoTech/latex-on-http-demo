@@ -18,3 +18,29 @@ html, body {
 #app {
 	height: 100%;
 }
+
+.source {
+    width: 50%;
+    float: left;
+    margin-bottom: 20px;
+}
+
+.sourceFull {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.source h3, .sourceFull h3 {
+    margin-left: 2em;
+}
+
+
+.input {
+    margin: 20px;
+    margin-bottom: 0;
+    display: inline-block;
+}
+
+.convert {
+    margin: 20px;
+}

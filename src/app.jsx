@@ -21,9 +21,9 @@ import { json as jsonLang, jsonLanguage } from '@codemirror/lang-json';
 
 import style from './style.css';
 
-import Header from './header';
+import Header from './components/header';
 
-import PROPOSAL_TEMPLATE from '../templates/proposal';
+import PROPOSAL_TEMPLATE from './templates/proposal';
 
 doT.templateSettings = {
 	evaluate:    /<<([\s\S]+?)>>/g,
@@ -237,7 +237,7 @@ export default function LatexOnHttpDemoApp() {
 		<div id="app">
 			<Header />
 			<div>
-				<div class={style.input} >
+				<div class="input" >
 					<span>Template: </span>
 					<select value={currentTemplateIndex} onChange={onTemplateSelection} >
 						{
@@ -249,14 +249,14 @@ export default function LatexOnHttpDemoApp() {
 					</select>
 				</div>
 				<br />
-				<div class={style.input}>
+				<div class="input">
 					<span>Name: </span>
 					<input
 						type="text" value={template.name}
 						onChange={e => onTemplateEntryChange('name', e.target.value)}	
 					/>
 				</div>
-				<div class={style.input} >
+				<div class="input" >
 					<span>Compiler: </span>
 					<select
 						value={template.compiler}
@@ -269,11 +269,11 @@ export default function LatexOnHttpDemoApp() {
 						}
 					</select>
 				</div>
-				<button class={style.convert} onClick={compileTemplate}>
+				<button class="convert" onClick={compileTemplate}>
 					Compile template
 				</button>
 				<button
-					class={style.convert}
+					class="convert"
 					onClick={convertToPdf}
 					disabled={isCompiling}
 				>
@@ -283,7 +283,7 @@ export default function LatexOnHttpDemoApp() {
 
 			<div style={{ clear: 'both' }} />
 
-			<div class={style.source} >
+			<div class="source" >
 				<h3>Source data (yaml)</h3>
 				<CodeMirror
 					value={template.yamlData}
@@ -293,7 +293,7 @@ export default function LatexOnHttpDemoApp() {
 				/>
 			</div>
 
-			<div class={style.source} >
+			<div class="source" >
 				<h3>Source template (LaTeX)</h3>
 				<CodeMirror
 					value={template.latexTemplate}
@@ -304,7 +304,7 @@ export default function LatexOnHttpDemoApp() {
 			</div>
 
 			{ jsonData &&
-				<div class={style.source} >
+				<div class="source" >
 					<h3>Generated data (json)</h3>
 					<CodeMirror
 						value={jsonData}
@@ -315,7 +315,7 @@ export default function LatexOnHttpDemoApp() {
 			}
 
 			{ latexCodeCompiled &&
-				<div class={style.source} >
+				<div class="source" >
 					<h3>Generated LaTeX with data</h3>
 					<CodeMirror
 						value={latexCodeCompiled}
@@ -326,7 +326,7 @@ export default function LatexOnHttpDemoApp() {
 			}
 
 			{ latexOnHttpPayload &&
-				<div class={style.sourceFull} >
+				<div class="sourceFull" >
 					<h3>Payload for LaTeX-on-HTTP (json) </h3>
 					<CodeMirror
 						value={latexOnHttpPayload}
