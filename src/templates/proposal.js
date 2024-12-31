@@ -291,8 +291,8 @@ Fait à Musterstadt, le 24 juillet 2020.
 \end{document}`;
 
 export default {
-	name: "proposal",
-	yamlData: YAML_DATA,
-	compiler: 'xelatex',
-	latexTemplate: LATEX_TEMPLATE
+  name: "proposal",
+  yamlData: YAML_DATA,
+  compiler: "xelatex",
+  latexTemplate: LATEX_TEMPLATE,
 };
